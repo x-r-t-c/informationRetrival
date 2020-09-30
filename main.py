@@ -1,8 +1,4 @@
-import concurrent.futures
-import time
-from bs4 import BeautifulSoup
-import requests
-import re
+import indexer
 from MyCrawler import *
 
 counter = 0
@@ -38,8 +34,9 @@ while counter < 200:
 
     print(counter)
 
-for link in data:
-    print(link, data[link])
+# for link in data:
+#    print(link, data[link])
+indexer.indexing_data(data)
 
 
 
