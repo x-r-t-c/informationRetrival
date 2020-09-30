@@ -30,8 +30,19 @@ class MyCrawler:
         page = requests.get(url)
         soup = BeautifulSoup(page.content, "html.parser")
         for link in soup.find_all("a", attrs={'href': re.compile("^http?s://")}):
-            links.append(link.get("href"))
+            links.add(link.get("href"))
         return links
+
+    @staticmethod
+    def scrape_data(url):
+        scraped_text = []
+        # my_dict[url] = ["a", "b", "c"]
+        page = requests.get(url)
+        soup = BeautifulSoup(page.content, "html.parser")
+        for text in soup.find_all("p"):
+            replaced = re.sub("<[^>]*>", "", str(text))
+            scraped_text.append(replaced)
+        return scraped_text
 
     def boot(self):
         # Αν δεν υπάρχει data_directory, το δημιουργεί
