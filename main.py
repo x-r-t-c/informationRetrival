@@ -10,7 +10,8 @@ myCrawler.boot()
 myCrawler.queue_to_set()
 myCrawler.print_crawler()
 
-while counter < 200:
+# crawl pages until counter reaches num_of_pages
+while counter < myCrawler.num_of_pages:
     if MyCrawler.queue:
         link = MyCrawler.queue.pop()
     else:
@@ -36,7 +37,7 @@ while counter < 200:
 
 # for link in data:
 #    print(link, data[link])
-indexer.indexing_data(data)
+print(indexer.indexing_data(data))
 
 
 

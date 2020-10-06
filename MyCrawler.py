@@ -5,10 +5,14 @@ import requests
 
 
 class MyCrawler:
-    # Μεταβλητές κλάσης
+    # class variables
     queue = set()
     crawled = set()
     counter = 0
+
+    # locks for multithreading
+    lock_queue = False
+    lock_crawled = False
 
     def __init__(self, url, num_of_pages, delete_data, num_of_threads,
                  data_directory="Data", queue_file="/queue.txt", crawled_file="/crawled.txt"):
@@ -16,7 +20,7 @@ class MyCrawler:
         self.num_of_pages = num_of_pages
         self.delete_data = delete_data
         self.num_of_threads = num_of_threads
-        # Αρχικοποιεί τα paths του φακέλου Data και των αρχείων queue και crawled
+        # Initializes the paths of Data file and queue,crawled files
         self.data_directory = data_directory
         self.queue_file = queue_file
         self.crawled_file = crawled_file
@@ -24,7 +28,7 @@ class MyCrawler:
     @staticmethod
     def scrape_links(url):
         """
-        Βρίσκει και επιστρέφει όλα τα links που βρίσκονται στο συγκεκριμένο url
+        Finds all links inside the specific url
         """
         links = set()
         page = requests.get(url)
@@ -45,32 +49,32 @@ class MyCrawler:
         return scraped_text
 
     def boot(self):
-        # Αν δεν υπάρχει data_directory, το δημιουργεί
+        # if data_directory does not exists, creates the file
         if not os.path.exists(self.data_directory):
             os.makedirs(self.data_directory)
-            # Δημιουργεί το queue_file
+            # creates queue_file
             if not os.path.isfile(self.queue_file):
                 file = open(self.queue_file, 'w')
                 file.write(self.url)
                 file.close()
-            # Δημιουργεί το crawled_file
+            # creates crawled_file
             if not os.path.isfile(self.crawled_file):
                 file = open(self.crawled_file, 'w')
                 file.write("")
                 file.close()
-        # Αν υπάρχει το data_directory
+        # if data_directory exists
         else:
-            # Αν το delete_data είναι 1, διαγράφει τα προηγούμενα δεδομένα
+            # if delete_data is 1, deletes the previous data
             if self.delete_data:
-                # Διαγράφει τα δεδομένα του αρχείου queue_file
+                # deletes the data of queue_file
                 queue_path = self.data_directory + self.queue_file
                 with open(queue_path, "w"):
                     pass
-                # Και κάνει append το starting url
+                # append the starting url
                 file = open(queue_path, "w")
                 file.write(self.url)
                 file.close()
-                # Διαγράφει τα δεδομένα του αρχείου crawled_file
+                # deletes the data of crawled_file
                 crawled_path = self.data_directory + self.crawled_file
                 with open(crawled_path, "w"):
                     pass
@@ -99,3 +103,22 @@ class MyCrawler:
             for line in file:
                 MyCrawler.crawled.add(line.replace("\n", ""))
 
+    @staticmethod
+    def queue_to_file(path, data):
+        with open(path, 'a') as file:
+            while not MyCrawler.lock_queue:
+                # for concurrency control
+                MyCrawler.lock_queue = True
+                file.write(data)
+                file.close()
+                MyCrawler.lock_queue = False
+
+    @staticmethod
+    def crawled_to_file(path, data):
+        with open(path, 'a') as file:
+            while not MyCrawler.lock_crawled:
+                # for concurrency control
+                MyCrawler.lock_crawled = True
+                file.write(data)
+                file.close()
+                MyCrawler.lock_crawled = False
